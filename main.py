@@ -48,7 +48,7 @@ def convert_meta(url):
         if "classifiers" in lib["downloads"]:
             native = {}
             for key, value in lib["downloads"]["classifiers"].items():
-                if key == "javadoc" or key == "source":
+                if key == "javadoc" or key == "sources":
                     continue
                 elif key == "natives-osx":
                     key = "natives-macos"
