@@ -3,7 +3,6 @@
     "vendor": "community",
     "type": "modern",
     "subtype": "optifine",
-    "i18nKey": "misc.version.modern.optifine",
     "url": "http://cdn.mrcolt.ru/quick-launcher/files/optifine_1.12.2.json"
   },
   {
@@ -11,7 +10,6 @@
     "vendor": "community",
     "type": "modern",
     "subtype": "optifine",
-    "i18nKey": "misc.version.modern.optifine",
     "url": "http://cdn.mrcolt.ru/quick-launcher/files/optifine_1.11.2.json"
   },
   {
@@ -19,7 +17,6 @@
     "vendor": "community",
     "type": "modern",
     "subtype": "optifine",
-    "i18nKey": "misc.version.modern.optifine",
     "url": "http://cdn.mrcolt.ru/quick-launcher/files/optifine_1.10.2.json"
   },
   {
@@ -27,7 +24,6 @@
     "vendor": "community",
     "type": "modern",
     "subtype": "optifine",
-    "i18nKey": "misc.version.modern.optifine",
     "url": "http://cdn.mrcolt.ru/quick-launcher/files/optifine_1.9.4.json"
   },
   {
@@ -35,7 +31,6 @@
     "vendor": "community",
     "type": "modern",
     "subtype": "optifine",
-    "i18nKey": "misc.version.modern.optifine",
     "url": "http://cdn.mrcolt.ru/quick-launcher/files/optifine_1.8.9.json"
   }
 ]
