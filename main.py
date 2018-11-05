@@ -1,6 +1,7 @@
 import json
-
+import threading
 import time
+from queue import Queue
 
 import certifi
 import urllib3
@@ -20,13 +21,6 @@ http = urllib3.PoolManager(
     ca_certs=certifi.where(),
     headers=HEADERS
 )
-
-
-def load_manifests():
-    response = http.request("GET", OFFICIAL_MANIFEST)
-    original = json.loads(response.data.decode("utf-8"))
-    community = json.load(open(COMMUNITY_MANIFEST))
-    return original, community
 
 
 def convert_meta(url):
@@ -53,12 +47,17 @@ def convert_meta(url):
     for lib in meta["libraries"]:
         if "classifiers" in lib["downloads"]:
             native = {}
-            for key, value in lib["natives"].items():
-                raw_native = lib["downloads"]["classifiers"][value]
+            for key, value in lib["downloads"]["classifiers"].items():
+                if key == "javadoc" or key == "source":
+                    continue
+                elif key == "natives-osx":
+                    key = "natives-macos"
+
                 native[key] = {
-                    "path": raw_native["path"],
-                    "url": raw_native["url"]
+                    "path": value["path"],
+                    "url": value["url"]
                 }
+
             natives.append(native)
         else:
             raw_lib = lib["downloads"]["artifact"]
@@ -71,9 +70,36 @@ def convert_meta(url):
     output["natives"] = natives
 
     json.dump(output, open(OUTPUT_META.format(meta["type"], meta["id"]), "w+"))
+    print("Converted {}".format(meta["id"]))
+
+
+class Downloader(threading.Thread):
+    def __init__(self, queue):
+        threading.Thread.__init__(self)
+        self.queue = queue
+
+    def run(self):
+        while True:
+            url = self.queue.get()
+            convert_meta(url)
+            self.queue.task_done()
+
+
+def load_manifests():
+    response = http.request("GET", OFFICIAL_MANIFEST)
+    original = json.loads(response.data.decode("utf-8"))
+    community = json.load(open(COMMUNITY_MANIFEST))
+    return original, community
 
 
 def main():
+    q = Queue()
+
+    for _ in range(10):
+        t = Downloader(q)
+        t.setDaemon(True)
+        t.start()
+
     original, community = load_manifests()
 
     manifest = []
@@ -101,9 +127,11 @@ def main():
         for i in marked_to_pop:
             community.pop(i)
 
-        convert_meta(o_entry["url"])
+        q.put(o_entry["url"])
 
     json.dump(manifest, open(OUTPUT_MANIFEST, "w+"))
+    q.join()
+    print("Done!")
 
 
 if __name__ == "__main__":
