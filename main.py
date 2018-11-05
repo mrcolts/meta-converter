@@ -42,23 +42,20 @@ def convert_meta(url):
     }
 
     libraries = []
-    natives = []
+    natives = {}
 
     for lib in meta["libraries"]:
         if "classifiers" in lib["downloads"]:
-            native = {}
             for key, value in lib["downloads"]["classifiers"].items():
                 if key == "javadoc" or key == "sources":
                     continue
                 elif key == "natives-osx":
                     key = "natives-macos"
 
-                native[key] = {
-                    "path": value["path"],
-                    "url": value["url"]
-                }
+                if key not in natives:
+                    natives[key] = []
 
-            natives.append(native)
+                natives[key].append(value["url"])
         else:
             raw_lib = lib["downloads"]["artifact"]
             libraries.append({
