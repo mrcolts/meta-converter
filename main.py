@@ -13,6 +13,7 @@ COMMUNITY_MANIFEST = './community_versions_manifest.json'
 OUTPUT_MANIFEST = './manifest.json'
 OUTPUT_META = './meta/{}_{}.json'
 HEADERS = {"Host": "launchermeta.mojang.com", "User-Agent": "Mozilla/5.0"}
+BASE_URL = 'http://localhost/{}_{}.json'
 
 http = urllib3.PoolManager(
     cert_reqs='CERT_REQUIRED',
@@ -87,7 +88,7 @@ def main():
             "vendor": "official",
             "type": new_type,
             "subtype": o_entry["type"],
-            "url": o_entry["url"]
+            "url": BASE_URL.format(o_entry["type"], o_entry["id"])
         })
 
         marked_to_pop = []
