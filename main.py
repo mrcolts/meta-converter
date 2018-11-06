@@ -11,6 +11,13 @@ def convert_meta(url):
     output = {
         "client": meta["downloads"]["client"]["url"],
         "mainClass": meta["mainClass"],
+        "assets": {
+            "id": meta["assetIndex"]["id"],
+            "url": meta["assetIndex"]["url"]
+        },
+        "arguments": [],
+        "libraries": [],
+        "natives": {}
     }
 
     if "arguments" in meta.keys():
@@ -18,34 +25,20 @@ def convert_meta(url):
     else:
         output["arguments"] = [x for x in meta["minecraftArguments"].split(" ")]
 
-    output["assets"] = {
-        "id": meta["assetIndex"]["id"],
-        "url": meta["assetIndex"]["url"]
-    }
-
-    libraries = []
-    natives = []
-
     for lib in meta["libraries"]:
         if "classifiers" in lib["downloads"]:
-            native = {}
             for key, value in lib["downloads"]["classifiers"].items():
                 if key == "javadoc" or key == "sources":
                     continue
                 elif key == "natives-osx":
                     key = "natives-macos"
 
-                native[key] = value["url"]
-            natives.append(native)
-        else:
-            raw_lib = lib["downloads"]["artifact"]
-            libraries.append({
-                "path": raw_lib["path"],
-                "url": raw_lib["url"]
-            })
+                if key not in output["natives"]:
+                    output["natives"][key] = []
 
-    output["libraries"] = libraries
-    output["natives"] = natives
+                output["natives"][key].append(value["path"])
+        else:
+            output["libraries"].append(lib["downloads"]["artifact"]["path"])
 
     json.dump(output, open(OUTPUT_META.format(meta["type"], meta["id"]), "w+"))
 
