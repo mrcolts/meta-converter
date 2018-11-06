@@ -1,26 +1,8 @@
 import json
 import threading
-import time
 from queue import Queue
 
-import certifi
-import urllib3
-
-TIME_FORMAT = '%Y-%m-%dT%H:%M:%S+00:00'
-MODERN_ENDPOINT = time.strptime('2013-10-25T13:00:00+00:00', TIME_FORMAT)
-LEGACY_ENDPOINT = time.strptime('2011-09-18T22:00:00+00:00', TIME_FORMAT)
-OFFICIAL_MANIFEST = 'https://launchermeta.mojang.com/mc/game/version_manifest.json'
-COMMUNITY_MANIFEST = './community_versions_manifest.json'
-OUTPUT_MANIFEST = './manifest.json'
-OUTPUT_META = './meta/{}_{}.json'
-HEADERS = {"Host": "launchermeta.mojang.com", "User-Agent": "Mozilla/5.0"}
-BASE_URL = 'http://localhost/{}_{}.json'
-
-http = urllib3.PoolManager(
-    cert_reqs='CERT_REQUIRED',
-    ca_certs=certifi.where(),
-    headers=HEADERS
-)
+from settings import *
 
 
 def convert_meta(url):
@@ -42,20 +24,19 @@ def convert_meta(url):
     }
 
     libraries = []
-    natives = {}
+    natives = []
 
     for lib in meta["libraries"]:
         if "classifiers" in lib["downloads"]:
+            native = {}
             for key, value in lib["downloads"]["classifiers"].items():
                 if key == "javadoc" or key == "sources":
                     continue
                 elif key == "natives-osx":
                     key = "natives-macos"
 
-                if key not in natives:
-                    natives[key] = []
-
-                natives[key].append(value["url"])
+                native[key] = value["url"]
+            natives.append(native)
         else:
             raw_lib = lib["downloads"]["artifact"]
             libraries.append({
@@ -67,7 +48,6 @@ def convert_meta(url):
     output["natives"] = natives
 
     json.dump(output, open(OUTPUT_META.format(meta["type"], meta["id"]), "w+"))
-    print("Converted {}".format(meta["id"]))
 
 
 class Downloader(threading.Thread):
@@ -90,23 +70,23 @@ def load_manifests():
 
 
 def main():
-    q = Queue()
+    queue = Queue()
 
     for _ in range(10):
-        t = Downloader(q)
+        t = Downloader(queue)
         t.setDaemon(True)
         t.start()
 
     original, community = load_manifests()
 
-    manifest = []
+    output = []
 
     for o_entry in original["versions"]:
         release_time = time.strptime(o_entry["releaseTime"], TIME_FORMAT)
 
-        new_type = "modern" if release_time > MODERN_ENDPOINT else "legacy" if release_time > LEGACY_ENDPOINT else "classic"
+        new_type = "modern" if release_time > MODERN else "legacy" if release_time > LEGACY else "classic"
 
-        manifest.append({
+        output.append({
             "id": o_entry["id"],
             "vendor": "official",
             "type": new_type,
@@ -118,17 +98,16 @@ def main():
 
         for c_entry in community:
             if c_entry["id"] == o_entry["id"]:
-                manifest.append(c_entry)
+                output.append(c_entry)
                 marked_to_pop.append(community.index(c_entry))
 
         for i in marked_to_pop:
             community.pop(i)
 
-        q.put(o_entry["url"])
+        queue.put(o_entry["url"])
 
-    json.dump(manifest, open(OUTPUT_MANIFEST, "w+"))
-    q.join()
-    print("Done!")
+    json.dump(output, open(OUTPUT_MANIFEST, "w+"))
+    queue.join()
 
 
 if __name__ == "__main__":
