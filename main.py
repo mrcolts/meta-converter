@@ -9,6 +9,8 @@ def convert_meta(url):
     meta: dict = json.loads(http.request("GET", url).data.decode("utf-8"))
 
     output = {
+        "id": meta["id"],
+        "type": meta["type"],
         "client": meta["downloads"]["client"]["url"],
         "assets": {
             "id": meta["assetIndex"]["id"],
