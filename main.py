@@ -84,13 +84,13 @@ def main():
     for o_entry in original["versions"]:
         release_time = time.strptime(o_entry["releaseTime"], TIME_FORMAT)
 
-        new_type = "modern" if release_time > MODERN else "legacy" if release_time > LEGACY else "classic"
+        group = "modern" if release_time > MODERN else "legacy" if release_time > LEGACY else "classic"
 
         output.append({
             "id": o_entry["id"],
             "vendor": "official",
-            "type": new_type,
-            "subtype": o_entry["type"],
+            "group": group,
+            "type": o_entry["type"],
             "url": BASE_URL.format(o_entry["type"], o_entry["id"])
         })
 
