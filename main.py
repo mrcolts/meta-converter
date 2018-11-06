@@ -10,20 +10,26 @@ def convert_meta(url):
 
     output = {
         "client": meta["downloads"]["client"]["url"],
-        "mainClass": meta["mainClass"],
         "assets": {
             "id": meta["assetIndex"]["id"],
             "url": meta["assetIndex"]["url"]
         },
-        "arguments": [],
+        "arguments": [
+            "-Xmx${memory}M",
+            "-Djava.library.path=${natives_path}",
+            "-Dfile.encoding=UTF-8",
+            "-cp",
+            "${classpath}",
+            meta["mainClass"]
+        ],
         "libraries": [],
         "natives": {}
     }
 
     if "arguments" in meta.keys():
-        output["arguments"] = [x for x in meta["arguments"]["game"] if "rules" not in x]
+        output["arguments"].extend([x for x in meta["arguments"]["game"] if "rules" not in x])
     else:
-        output["arguments"] = [x for x in meta["minecraftArguments"].split(" ")]
+        output["arguments"].extend([x for x in meta["minecraftArguments"].split(" ")])
 
     for lib in meta["libraries"]:
         if "classifiers" in lib["downloads"]:
