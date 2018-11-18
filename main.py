@@ -12,6 +12,7 @@ def convert_meta(url):
         "id": meta["id"],
         "type": meta["type"],
         "client": meta["downloads"]["client"]["url"],
+        "mainClass": meta["mainClass"],
         "assets": {
             "id": meta["assetIndex"]["id"],
             "url": meta["assetIndex"]["url"]
@@ -22,7 +23,7 @@ def convert_meta(url):
             "-Dfile.encoding=UTF-8",
             "-cp",
             "${classpath}",
-            meta["mainClass"]
+            "${main_class}"
         ],
         "libraries": [],
         "natives": {}
